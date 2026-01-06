@@ -119,4 +119,4 @@ Os seguintes recursos são opcionais, mas podem impressionar:
 - **Visualização Fallback** para formatos não suportados
 
 
-Se tiver dúvidas, sinta-se à vontade para perguntar no email `luma@proesc.com`
+Se tiver dúvidas, sinta-se à vontade para perguntar no email `murilo.alvez@proesc.com`
