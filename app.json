@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Proesc - Portal do Aluno",
+    "slug": "proesc-portal-aluno",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4f46e5"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.proesc.portalaluno"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4f46e5"
+      },
+      "package": "com.proesc.portalaluno"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app precisa de acesso às suas fotos para enviar documentos.",
+          "cameraPermission": "O app precisa de acesso à câmera para capturar documentos."
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-asset",
+        {
+          "assets": [
+            "./assets/documents/historico_escolar.docx",
+            "./assets/documents/declaracao_matricula.pdf"
+          ]
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "proesc-portal-aluno"
+      }
+    }
+  }
+}

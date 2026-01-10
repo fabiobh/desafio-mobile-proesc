@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicado - Colégio Esperança</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .school-logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .school-name {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .school-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .comunicado-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #4facfe;
+        }
+
+        .comunicado-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .comunicado-number {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4);
+        }
+
+        .date-info {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        .message-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .highlight-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .info-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .info-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4facfe;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 25px 40px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .signature {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .signature-title {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+
+        .contact-info {
+            background: rgba(79, 172, 254, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .contact-info h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .contact-info p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin: 3px 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .content, .footer {
+                padding: 25px;
+            }
+            
+            .school-name {
+                font-size: 1.8rem;
+            }
+            
+            .comunicado-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="school-logo">🎓</div>
+            <h1 class="school-name">Colégio Esperança</h1>
+            <p class="school-subtitle">Educação com Excelência e Valores</p>
+        </div>
+
+        <div class="content">
+            <div class="comunicado-header">
+                <div class="comunicado-number">Comunicado Nº 015/2025</div>
+                <h2 class="comunicado-title">Reunião de Pais e Mestres - 1º Bimestre</h2>
+                <div class="date-info">Macapá, 02 de junho de 2025</div>
+            </div>
+
+            <div class="message-content">
+                <p><strong>Prezados Pais e Responsáveis,</strong></p>
+                
+                <p>É com grande satisfação que convidamos V.Sa. para participar da <strong>Reunião de Pais e Mestres</strong> referente ao primeiro bimestre letivo de 2025. Este é um momento fundamental para acompanharmos juntos o desenvolvimento acadêmico e social de nossos estudantes.</p>
+
+                <div class="highlight-box">
+                    <h3>📅 Informações Importantes:</h3>
+                    <ul class="info-list">
+                        <li><strong>Data:</strong> Sábado, 15 de junho de 2025</li>
+                        <li><strong>Horário:</strong> Das 8h00 às 12h00</li>
+                        <li><strong>Local:</strong> Auditório Principal do Colégio</li>
+                        <li><strong>Duração:</strong> Aproximadamente 45 minutos por turma</li>
+                    </ul>
+                </div>
+
+                <p>Durante a reunião, serão apresentados os seguintes tópicos:</p>
+
+                <ul class="info-list">
+                    <li>Desempenho acadêmico individual dos alunos</li>
+                    <li>Projetos pedagógicos desenvolvidos no bimestre</li>
+                    <li>Calendário de atividades do 2º bimestre</li>
+                    <li>Orientações para o acompanhamento domiciliar</li>
+                    <li>Esclarecimento de dúvidas gerais</li>
+                </ul>
+
+                <p>Ressaltamos a importância da presença de todos os responsáveis, pois a parceria entre escola e família é essencial para o sucesso educacional de nossos alunos. Caso não seja possível comparecer na data marcada, solicitamos que entrem em contato conosco para agendarmos um horário alternativo.</p>
+
+                <p>Para aqueles que desejarem, após a reunião haverá um momento de confraternização com um lanche especial preparado pela nossa equipe.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="contact-info">
+                <h4>📞 Informações de Contato</h4>
+                <p><strong>Telefone:</strong> (96) 3223-4567</p>
+                <p><strong>WhatsApp:</strong> (96) 99999-8888</p>
+                <p><strong>E-mail:</strong> contato@colegioesperanca.edu.br</p>
+                <p><strong>Endereço:</strong> Rua das Flores, 123 - Centro, Macapá/AP</p>
+            </div>
+
+            <div class="signature">
+                <div class="signature-name">Profa. Maria Silva Santos</div>
+                <div class="signature-title">Diretora Pedagógica</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

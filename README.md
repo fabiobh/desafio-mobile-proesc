@@ -1,122 +1,118 @@
-# Desafio Técnico Proesc: Portal de Documentos do Aluno
+# Proesc - Portal do Aluno 📚
 
-## **Descrição do Projeto**
-Desenvolva um app onde o aluno/responsável faz login, visualiza documentos escolares e pode enviar novos documentos para a escola. O foco é na **visualização de diferentes formatos** (PDF, DOCX, HTML) e **upload de documentos**.
+Um aplicativo React Native para visualização e envio de documentos escolares.
 
-Faça download dos arquivos presentes na pasta `assets` para usar como exemplo de documentos.
+## 🚀 Como Rodar o Projeto
 
-Em relação a APIs, na pasta `assets/mock` você encontrará um mock de API que pode ser usado para simular as requisições, através de um arquivo JSON. Você pode usar esse mock para desenvolver o app, mas é importante que o app funcione como se estivesse consumindo uma API real.
+### Pré-requisitos
+- Node.js 18+
+- npm ou yarn
+- Expo CLI (`npm install -g expo-cli`)
+- Expo Go no celular (iOS/Android)
 
-## **Requisitos Funcionais**
+### Instalação
 
-### **Autenticação (Obrigatório)**
-- Login com **matrícula + senha**
-- Validação simples de campos
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/desafio-mobile-proesc.git
+cd desafio-mobile-proesc
+
+# Instale as dependências
+npm install
+
+# Inicie o projeto
+npx expo start
+```
+
+### Executando
+
+1. Escaneie o QR code com o app **Expo Go** (Android) ou **Câmera** (iOS)
+2. Ou pressione `i` para iOS Simulator / `a` para Android Emulator
+
+## 🔐 Credenciais de Teste
+
+| Campo     | Valor      |
+|-----------|------------|
+| Matrícula | `123456`   |
+| Senha     | `aluno123` |
+
+## 📱 Funcionalidades
+
+### ✅ Autenticação
+- Login com matrícula + senha
+- Validação de campos
+- Persistência de sessão
 - Logout funcional
-- Persistir sessão
 
-### **Visualização de Documentos do Aluno (Obrigatório)**
-- **Lista de documentos** disponíveis do aluno
-- **Categorias**: Histórico, Boletins, Declarações, Comunicados
-- **Diferentes formatos**: PDF, DOCX, HTML, Imagens
-- **Visualização inline** dentro do app
-- Pull-to-refresh para atualizar lista
+### ✅ Visualização de Documentos
+- Lista de documentos por categoria
+- Filtros: Histórico, Boletins, Declarações, Comunicados
+- Suporte a formatos: PDF, DOCX, HTML, Imagens
+- Visualização inline no app
+- Pull-to-refresh
 
-Implementar renderização para diferentes formatos de documento.
+### ✅ Upload de Documentos
+- Captura por câmera
+- Seleção da galeria
+- Seleção de arquivos
+- Categorização (Atestado, Justificativa, etc.)
+- Status de envio (Enviado → Em Análise → Aprovado)
 
-### **Upload de Novos Documentos (Obrigatório)**
-- **Adicionar documentos** para envio à escola
-- **Captura por câmera** ou **seleção da galeria**
-- **Seleção de arquivos** do dispositivo
-- **Categorização** do documento (atestado, justificativa, etc.)
-- **Status de envio** (enviado, em análise, aprovado)
+## 🛠 Stack Técnica
 
-### **Interface**
-- Bottom sheet para visualizar/enviar documentos
-- Navegação stack simples
-- Estados de loading e erro
-
-## **Requisitos Técnicos**
-
-### **Stack**
 - **React Native** + **Expo**
 - **TypeScript**
-- **NativeWind**
+- **NativeWind** (TailwindCSS)
 - **React Navigation**
+- **AsyncStorage** (persistência)
+- **Expo Image/Document Picker**
+- **Bottom Sheet** (@gorhom/bottom-sheet)
 
-Mas fique a vontade para usar outras bibliotecas ou ferramentas que achar necessárias!
+## 📁 Estrutura do Projeto
 
-## **Estrutura de Dados**
-
-### **Documentos disponíveis para o Aluno**
-```typescript
-interface Document {
-  id: string;
-  title: string;
-  type: 'pdf' | 'docx' | 'html' | 'image';
-  category: 'historico' | 'boletim' | 'declaracao' | 'comunicado';
-  url: string;
-  date: string;
-  size: string;
-}
+```
+src/
+├── components/
+│   ├── DocumentCard.tsx
+│   └── UploadBottomSheet.tsx
+├── contexts/
+│   └── AuthContext.tsx
+├── navigation/
+│   └── AppNavigator.tsx
+├── screens/
+│   ├── LoginScreen.tsx
+│   ├── HomeScreen.tsx
+│   └── DocumentViewerScreen.tsx
+├── services/
+│   └── api.ts (mock)
+├── types/
+│   └── index.ts
+└── constants/
+    └── index.ts
 ```
 
-### **Documentos Enviados pelo Aluno**
-```typescript
-interface UploadedDocument {
-  id: string;
-  title: string;
-  category: 'atestado' | 'justificativa' | 'requerimento';
-  status: 'enviado' | 'em_analise' | 'aprovado' | 'rejeitado';
-  uploadDate: string;
-  file: File;
-}
+## 📸 Screenshots
+
+[Em desenvolvimento - adicione screenshots aqui]
+
+## 🔄 Fluxos Principais
+
+### Visualização
+```
+Login → Lista de Documentos → Filtrar categoria → Abrir documento → Visualizar
 ```
 
-# 📄 Mock 
+### Upload
+```
+FAB (+) → Bottom Sheet → Selecionar categoria → Escolher arquivo → Enviar
+```
 
-### **Estrutura de Endpoints Simulados**
+## 📝 Notas de Implementação
 
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/api/auth/login` | POST | Login do usuário |
-| `/api/student/documents` | GET | Documentos disponíveis |
-| `/api/student/documents/uploaded` | GET | Documentos enviados |
-| `/api/student/documents/upload` | POST | Upload novo documento |
-| `/api/student/documents/{id}/status` | PUT | Atualizar status |
+- **Mock API**: Todas as requisições são simuladas localmente
+- **Documentos de exemplo**: Incluídos em `assets/documents/`
+- **Status automático**: Documentos enviados mudam para "Em Análise" após 5s
 
-## **Fluxos Principais**
+## 👨‍💻 Autor
 
-### **1. Visualização de Documentos**
-- Login → Lista de documentos → Clique no documento → Visualização no formato correto
-
-### **2. Upload de Documentos**
-- Bottom sheet "Adicionar documento"
-- Escolher categoria
-- Selecionar fonte: câmera, galeria ou arquivos
-- Upload com feedback visual
-- Atualização do status em tempo real
-
-## **Tempo de Entrega**
-**4-5 dias**
-
-## **Entregáveis**
-**Repositório GitHub** com:
-1. **Código fonte completo**
-2. **README.md** explicando:
-   - **Como rodar o projeto**
-   - **Como testar as funcionalidades**
-   - **Credenciais de teste** (ex: matrícula: 123456, senha: aluno123)
-   - **Screenshots** ou **vídeos** demonstrando o funcionamento (opcional)
-   - **Link para o app** (se possível, usando Expo Go) (opcional)
-
-## **Extras que Impressionam**
-Os seguintes recursos são opcionais, mas podem impressionar:
-- **Modo Offline** de documentos baixados
-- **Pesquisa** dentro dos documentos
-- **Annotations** simples em PDFs
-- **Compressão** de imagens no upload
-- **Visualização Fallback** para formatos não suportados
-
-
-Se tiver dúvidas, sinta-se à vontade para perguntar no email `murilo.alvez@proesc.com`
+Desenvolvido para o Desafio Técnico Proesc.
