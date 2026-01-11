@@ -82,6 +82,13 @@ export function DocumentCard({ document, isUploaded = false, onPress }: Document
                                 </View>
                             </>
                         )}
+
+                        {/* Offline indicator */}
+                        {availableDoc?.isOffline && (
+                            <View className="bg-green-100 px-2 py-0.5 rounded ml-2">
+                                <Text className="text-green-700 text-xs font-medium">📥 Offline</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
 

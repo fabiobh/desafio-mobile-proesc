@@ -21,6 +21,32 @@ export interface Document {
     size: string;
     description?: string;
     pages?: number;
+    isOffline?: boolean;
+}
+
+// Offline Document metadata
+export interface OfflineDocumentMeta {
+    documentId: string;
+    title: string;
+    type: string;
+    localPath: string;
+    savedAt: string;
+    size?: string;
+}
+
+// PDF Annotation
+export interface Annotation {
+    id: string;
+    type: 'highlight' | 'note';
+    page: number;
+    x: number;
+    y: number;
+    width?: number;
+    height?: number;
+    text?: string;
+    color: string;
+    content?: string;
+    createdAt: string;
 }
 
 // Uploaded Document (by student)

@@ -17,6 +17,7 @@ import { Document, UploadedDocument, DocumentCategory, RootStackParamList } from
 import { DOCUMENT_CATEGORIES } from '../constants';
 import { DocumentCard } from '../components/DocumentCard';
 import { UploadBottomSheet } from '../components/UploadBottomSheet';
+import { offlineService } from '../services/offlineService';
 
 type HomeScreenProps = {
     navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -51,7 +52,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             ]);
 
             if (availableRes.success) {
-                setDocuments(availableRes.documents);
+                // Check offline status for each document
+                const docsWithOfflineStatus = await Promise.all(
+                    availableRes.documents.map(async (doc) => {
+                        const isOffline = await offlineService.isDocumentOffline(doc.id);
+                        return { ...doc, isOffline };
+                    })
+                );
+                setDocuments(docsWithOfflineStatus);
             }
             if (uploadedRes.success) {
                 setUploadedDocuments(uploadedRes.documents);
@@ -147,8 +155,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 className={`px-4 py-2 rounded-full mr-2 ${selectedCategory === item
-                                        ? 'bg-primary-600'
-                                        : 'bg-white border border-gray-200'
+                                    ? 'bg-primary-600'
+                                    : 'bg-white border border-gray-200'
                                     }`}
                                 onPress={() => setSelectedCategory(item)}
                             >
