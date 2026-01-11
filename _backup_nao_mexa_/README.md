@@ -24,6 +24,8 @@ Em relação a APIs, na pasta `assets/mock` você encontrará um mock de API que
 
 Implementar renderização para diferentes formatos de documento.
 
+- parei aqui
+
 ### **Upload de Novos Documentos (Obrigatório)**
 - **Adicionar documentos** para envio à escola
 - **Captura por câmera** ou **seleção da galeria**
