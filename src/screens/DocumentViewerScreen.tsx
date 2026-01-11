@@ -1,4 +1,13 @@
+/**
+ * Tela de Visualização de Documentos (DocumentViewerScreen)
+ * Renderiza diferentes tipos de documentos: PDF, DOCX, HTML e imagens
+ * Inclui funcionalidades de busca, modo offline e anotações
+ */
+
+// Importações do React
 import React, { useState, useEffect, useRef } from 'react';
+
+// Importa componentes do React Native
 import {
     View,
     Text,
@@ -11,24 +20,57 @@ import {
     Modal,
     Alert,
 } from 'react-native';
+
+// Importa tipos de navegação
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+
+// Importa container de área segura
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Importa WebView para renderização de HTML/PDF
 import { WebView } from 'react-native-webview';
+
+// Importa FileSystem para operações com arquivos
 import * as FileSystem from 'expo-file-system/legacy';
+
+// Importa Asset para carregar recursos bundled
 import { Asset } from 'expo-asset';
+
+// Importa tipos do projeto
 import { RootStackParamList, Document, Annotation } from '../types';
+
+// Importa constantes
 import { DOCUMENT_TYPE_ICONS } from '../constants';
+
+// Importa dados do DOCX (base64)
 import { DOCX_BASE64 } from '../data/docxData';
+
+// Importa serviços
 import { offlineService } from '../services/offlineService';
 import { annotationService } from '../services/annotationService';
 
+// ============================================
+// TIPOS
+// ============================================
+
+/**
+ * Props da tela DocumentViewerScreen
+ */
 type DocumentViewerScreenProps = {
     navigation: NativeStackNavigationProp<RootStackParamList, 'DocumentViewer'>;
     route: RouteProp<RootStackParamList, 'DocumentViewer'>;
 };
 
-// Sample HTML content for demonstration
+// ============================================
+// CONTEÚDO HTML DE EXEMPLO
+// ============================================
+
+/**
+ * Conteúdo HTML de demonstração
+ * Usado para documentos do tipo 'html'
+ * Simula um comunicado escolar
+ */
 const SAMPLE_HTML_CONTENT = `
 <!DOCTYPE html>
 <html>
@@ -98,44 +140,120 @@ const SAMPLE_HTML_CONTENT = `
 </html>
 `;
 
+// ============================================
+// COMPONENTE PRINCIPAL
+// ============================================
+
+/**
+ * Componente DocumentViewerScreen
+ * 
+ * Funcionalidades:
+ * - Renderiza diferentes tipos de documentos (PDF, DOCX, HTML, imagem)
+ * - Permite salvar documentos para acesso offline
+ * - Busca de texto dentro do documento
+ * - Anotações em PDFs (destaques e notas)
+ * 
+ * @param navigation - Objeto de navegação
+ * @param route - Parâmetros da rota (contém o documento)
+ */
 export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreenProps) {
+    // Extrai o documento dos parâmetros da rota
     const { document } = route.params;
+
+    // ========================================
+    // ESTADOS PRINCIPAIS
+    // ========================================
+
+    // Estado de carregamento
     const [isLoading, setIsLoading] = useState(true);
+
+    // Mensagem de erro (se houver)
     const [error, setError] = useState<string | null>(null);
+
+    // Conteúdo do PDF em base64
     const [pdfBase64, setPdfBase64] = useState<string | null>(null);
+
+    // Conteúdo do DOCX em base64
     const [docxBase64, setDocxBase64] = useState<string | null>(null);
 
-    // Offline state
+    // ========================================
+    // ESTADOS DE MODO OFFLINE
+    // ========================================
+
+    // Se o documento está salvo offline
     const [isOffline, setIsOffline] = useState(false);
+
+    // Se está salvando para offline
     const [isSavingOffline, setIsSavingOffline] = useState(false);
 
-    // Search state
+    // ========================================
+    // ESTADOS DE BUSCA
+    // ========================================
+
+    // Se a barra de busca está visível
     const [showSearch, setShowSearch] = useState(false);
+
+    // Texto de busca
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Número de resultados encontrados
     const [searchResults, setSearchResults] = useState(0);
+
+    // Índice do resultado atual (para navegação)
     const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
 
-    // Annotations state (for PDF)
+    // ========================================
+    // ESTADOS DE ANOTAÇÕES (para PDF)
+    // ========================================
+
+    // Lista de anotações do documento
     const [annotations, setAnnotations] = useState<Annotation[]>([]);
+
+    // Modo de anotação atual: nenhum, destaque ou nota
     const [annotationMode, setAnnotationMode] = useState<'none' | 'highlight' | 'note'>('none');
+
+    // Se o modal de nota está visível
     const [showNoteModal, setShowNoteModal] = useState(false);
+
+    // Texto da nota atual
     const [noteText, setNoteText] = useState('');
+
+    // Anotação selecionada para edição/exclusão
     const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
 
+    // ========================================
+    // REFS
+    // ========================================
+
+    // Referência ao WebView para injeção de JavaScript
     const webViewRef = useRef<WebView>(null);
+
+    // Dimensões da tela
     const { width, height } = Dimensions.get('window');
 
-    // Check offline status on mount
+    // ========================================
+    // EFEITOS
+    // ========================================
+
+    /**
+     * Ao montar, verifica status offline e carrega anotações
+     */
     useEffect(() => {
         checkOfflineStatus();
         loadAnnotations();
     }, [document.id]);
 
+    /**
+     * Verifica se o documento está salvo offline
+     */
     async function checkOfflineStatus() {
         const offline = await offlineService.isDocumentOffline(document.id);
         setIsOffline(offline);
     }
 
+    /**
+     * Carrega anotações salvas do documento (apenas para PDF)
+     */
     async function loadAnnotations() {
         if (document.type === 'pdf') {
             const savedAnnotations = await annotationService.getAnnotations(document.id);
@@ -143,25 +261,29 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         }
     }
 
+    /**
+     * Carrega o conteúdo do documento baseado no tipo
+     */
     useEffect(() => {
         async function loadDocument() {
-            // Try to load from offline cache first
+            // Tenta carregar do cache offline primeiro
             const offlineContent = await offlineService.getOfflineDocumentContent(document.id);
 
             if (document.type === 'pdf') {
                 try {
+                    // Se tem conteúdo offline, usa ele
                     if (offlineContent) {
                         setPdfBase64(offlineContent);
                         setIsLoading(false);
                         return;
                     }
 
-                    // Load the PDF asset
+                    // Carrega o asset PDF bundled
                     const asset = Asset.fromModule(require('../../assets/documents/declaracao_matricula.pdf'));
                     await asset.downloadAsync();
 
                     if (asset.localUri) {
-                        // Read the file as base64
+                        // Lê o arquivo como base64
                         const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
                             encoding: 'base64',
                         });
@@ -169,28 +291,29 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                     }
                     setIsLoading(false);
                 } catch (err) {
-                    console.error('Error loading PDF:', err);
+                    console.error('Erro ao carregar PDF:', err);
                     setError('Não foi possível carregar o documento PDF.');
                     setIsLoading(false);
                 }
             } else if (document.type === 'docx') {
                 try {
+                    // Se tem conteúdo offline, usa ele
                     if (offlineContent) {
                         setDocxBase64(offlineContent);
                         setIsLoading(false);
                         return;
                     }
 
-                    // Use pre-encoded base64 data for DOCX file
+                    // Usa dados base64 pré-codificados
                     setDocxBase64(DOCX_BASE64);
                     setIsLoading(false);
                 } catch (err) {
-                    console.error('Error loading DOCX:', err);
+                    console.error('Erro ao carregar DOCX:', err);
                     setError('Não foi possível carregar o documento DOCX.');
                     setIsLoading(false);
                 }
             } else {
-                // Simulate loading for other document types
+                // Para outros tipos, apenas simula carregamento
                 const timer = setTimeout(() => {
                     setIsLoading(false);
                 }, 500);
@@ -200,13 +323,20 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         loadDocument();
     }, [document]);
 
-    // Save document offline
+    // ========================================
+    // FUNÇÕES DE MODO OFFLINE
+    // ========================================
+
+    /**
+     * Salva o documento para acesso offline
+     */
     async function handleSaveOffline() {
         setIsSavingOffline(true);
         try {
             let content: string | null = null;
             let contentType: 'base64' | 'text' = 'base64';
 
+            // Determina o conteúdo baseado no tipo
             if (document.type === 'pdf' && pdfBase64) {
                 content = pdfBase64;
             } else if (document.type === 'docx' && docxBase64) {
@@ -226,14 +356,16 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 }
             }
         } catch (error) {
-            console.error('Error saving offline:', error);
+            console.error('Erro ao salvar offline:', error);
             Alert.alert('Erro', 'Não foi possível salvar o documento.');
         } finally {
             setIsSavingOffline(false);
         }
     }
 
-    // Remove from offline
+    /**
+     * Remove o documento do armazenamento offline
+     */
     async function handleRemoveOffline() {
         const success = await offlineService.removeOfflineDocument(document.id);
         if (success) {
@@ -242,13 +374,21 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         }
     }
 
-    // Search in WebView
+    // ========================================
+    // FUNÇÕES DE BUSCA
+    // ========================================
+
+    /**
+     * Executa busca no WebView
+     * Destaca todas as ocorrências do termo buscado
+     */
     function handleSearch() {
         if (!searchQuery.trim()) return;
 
+        // Script JavaScript injetado no WebView para busca
         const searchScript = `
             (function() {
-                // Clear previous highlights
+                // Limpa destaques anteriores
                 document.querySelectorAll('.search-highlight').forEach(el => {
                     el.outerHTML = el.innerHTML;
                 });
@@ -258,7 +398,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                     return;
                 }
                 
-                // Count matches
+                // Conta ocorrências
                 let count = 0;
                 const searchText = '${searchQuery.replace(/'/g, "\\'")}';
                 const regex = new RegExp(searchText, 'gi');
@@ -266,7 +406,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 const matches = body.match(regex);
                 count = matches ? matches.length : 0;
                 
-                // Highlight matches
+                // Destaca ocorrências
                 if (count > 0) {
                     document.body.innerHTML = body.replace(regex, '<mark class="search-highlight">$&</mark>');
                     const firstMatch = document.querySelector('.search-highlight');
@@ -281,7 +421,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         webViewRef.current?.injectJavaScript(searchScript);
     }
 
-    // Navigate search results
+    /**
+     * Navega entre resultados de busca (próximo/anterior)
+     */
     function navigateSearch(direction: 'next' | 'prev') {
         const script = `
             (function() {
@@ -308,20 +450,30 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         webViewRef.current?.injectJavaScript(script);
     }
 
-    // Handle WebView messages
+    // ========================================
+    // HANDLER DE MENSAGENS DO WEBVIEW
+    // ========================================
+
+    /**
+     * Processa mensagens recebidas do WebView
+     * Usado para comunicação bidirecional (busca, anotações)
+     */
     function handleWebViewMessage(event: any) {
         try {
             const data = JSON.parse(event.nativeEvent.data);
+
             if (data.type === 'searchResult') {
+                // Resultado de busca
                 setSearchResults(data.count);
                 setCurrentSearchIndex(0);
             } else if (data.type === 'searchIndex') {
+                // Navegação entre resultados
                 setCurrentSearchIndex(data.index);
             } else if (data.type === 'textSelected' && annotationMode === 'highlight') {
-                // Handle text selection for highlight
+                // Seleção de texto para destaque
                 handleAddHighlight(data);
             } else if (data.type === 'annotationClick') {
-                // Handle annotation click
+                // Clique em anotação existente
                 const annotation = annotations.find(a => a.id === data.id);
                 if (annotation) {
                     setSelectedAnnotation(annotation);
@@ -332,11 +484,17 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 }
             }
         } catch (e) {
-            // Not JSON, ignore
+            // Não é JSON, ignora
         }
     }
 
-    // Add highlight annotation
+    // ========================================
+    // FUNÇÕES DE ANOTAÇÕES
+    // ========================================
+
+    /**
+     * Adiciona um destaque (highlight) ao texto selecionado
+     */
     async function handleAddHighlight(data: any) {
         const newAnnotation = await annotationService.addAnnotation(document.id, {
             type: 'highlight',
@@ -346,17 +504,19 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
             width: data.width,
             height: data.height,
             text: data.text,
-            color: '#fef08a',
+            color: '#fef08a', // Amarelo
         });
 
         if (newAnnotation) {
             setAnnotations([...annotations, newAnnotation]);
-            Alert.alert('Highlight adicionado!');
+            Alert.alert('Destaque adicionado!');
         }
         setAnnotationMode('none');
     }
 
-    // Add note annotation
+    /**
+     * Adiciona ou atualiza uma nota
+     */
     async function handleAddNote() {
         if (!noteText.trim()) {
             Alert.alert('Erro', 'Digite uma nota.');
@@ -364,7 +524,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         }
 
         if (selectedAnnotation) {
-            // Update existing note
+            // Atualiza nota existente
             await annotationService.updateAnnotation(document.id, selectedAnnotation.id, {
                 content: noteText,
             });
@@ -372,13 +532,13 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 a.id === selectedAnnotation.id ? { ...a, content: noteText } : a
             ));
         } else {
-            // Add new note at center
+            // Cria nova nota no centro da página
             const newAnnotation = await annotationService.addAnnotation(document.id, {
                 type: 'note',
                 page: 1,
-                x: 50,
-                y: 50,
-                color: '#fbbf24',
+                x: 50, // Centro horizontal
+                y: 50, // Centro vertical
+                color: '#fbbf24', // Âmbar
                 content: noteText,
             });
 
@@ -387,13 +547,16 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
             }
         }
 
+        // Limpa e fecha modal
         setShowNoteModal(false);
         setNoteText('');
         setSelectedAnnotation(null);
         setAnnotationMode('none');
     }
 
-    // Delete annotation
+    /**
+     * Exclui anotação selecionada
+     */
     async function handleDeleteAnnotation() {
         if (selectedAnnotation) {
             await annotationService.removeAnnotation(document.id, selectedAnnotation.id);
@@ -403,7 +566,16 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         }
     }
 
+    // ========================================
+    // FUNÇÃO DE RENDERIZAÇÃO DE CONTEÚDO
+    // ========================================
+
+    /**
+     * Renderiza o conteúdo do documento baseado no tipo
+     * Suporta: HTML, PDF, Imagem, DOCX
+     */
     function renderDocumentContent() {
+        // Estado: Erro
         if (error) {
             return (
                 <View className="flex-1 items-center justify-center px-6">
@@ -420,6 +592,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         }
 
         switch (document.type) {
+            // ====================================
+            // TIPO: HTML
+            // ====================================
             case 'html':
                 return (
                     <WebView
@@ -437,6 +612,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                     />
                 );
 
+            // ====================================
+            // TIPO: PDF
+            // ====================================
             case 'pdf':
                 if (!pdfBase64) {
                     return (
@@ -447,10 +625,10 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                     );
                 }
 
-                // Generate annotations JavaScript
+                // Converte anotações para JSON
                 const annotationsJson = JSON.stringify(annotations);
 
-                // HTML with embedded PDF.js to render the PDF with search and annotations
+                // HTML com PDF.js embutido para renderização
                 const pdfHtml = `
                     <!DOCTYPE html>
                     <html>
@@ -561,6 +739,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                             const savedAnnotations = ${annotationsJson};
                             let currentSearchQuery = '';
                             
+                            // Renderiza todas as páginas do PDF
                             async function renderPDF() {
                                 try {
                                     const loadingTask = pdfjsLib.getDocument({ data: pdfData });
@@ -568,22 +747,26 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                     const container = document.getElementById('pdf-container');
                                     document.getElementById('loading').remove();
                                     
+                                    // Adiciona informação de páginas
                                     const pageInfo = document.createElement('div');
                                     pageInfo.className = 'page-info';
                                     pageInfo.textContent = 'Total: ' + pdf.numPages + ' página(s)';
                                     container.insertBefore(pageInfo, container.firstChild);
                                     
+                                    // Renderiza cada página
                                     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                         const page = await pdf.getPage(pageNum);
                                         const scale = 1.5;
                                         const viewport = page.getViewport({ scale });
                                         
+                                        // Cria wrapper da página
                                         const wrapper = document.createElement('div');
                                         wrapper.className = 'page-wrapper';
                                         wrapper.style.width = viewport.width + 'px';
                                         wrapper.style.height = viewport.height + 'px';
                                         wrapper.dataset.page = pageNum;
                                         
+                                        // Cria canvas para renderização
                                         const canvas = document.createElement('canvas');
                                         const context = canvas.getContext('2d');
                                         canvas.height = viewport.height;
@@ -592,36 +775,39 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                         wrapper.appendChild(canvas);
                                         container.appendChild(wrapper);
                                         
+                                        // Renderiza a página no canvas
                                         await page.render({
                                             canvasContext: context,
                                             viewport: viewport
                                         }).promise;
                                         
-                                        // Render text layer for selection
+                                        // Renderiza camada de texto para seleção
                                         const textContent = await page.getTextContent();
                                         const textLayer = document.createElement('div');
                                         textLayer.className = 'text-layer';
                                         wrapper.appendChild(textLayer);
                                         
-                                        // Render annotations for this page
+                                        // Renderiza anotações da página
                                         renderPageAnnotations(wrapper, pageNum);
                                     }
                                     
-                                    // Setup text selection listener
+                                    // Configura listener de seleção de texto
                                     document.addEventListener('mouseup', handleTextSelection);
                                     document.addEventListener('touchend', handleTextSelection);
                                     
                                 } catch (error) {
-                                    console.error('Error rendering PDF:', error);
+                                    console.error('Erro ao renderizar PDF:', error);
                                     document.getElementById('pdf-container').innerHTML = 
                                         '<div class="error">Erro ao renderizar o PDF: ' + error.message + '</div>';
                                 }
                             }
                             
+                            // Renderiza anotações de uma página
                             function renderPageAnnotations(wrapper, pageNum) {
                                 const pageAnnotations = savedAnnotations.filter(a => a.page === pageNum);
                                 pageAnnotations.forEach(ann => {
                                     if (ann.type === 'highlight' && ann.width && ann.height) {
+                                        // Destaque
                                         const highlight = document.createElement('div');
                                         highlight.className = 'annotation-highlight';
                                         highlight.style.left = ann.x + '%';
@@ -630,6 +816,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                         highlight.style.height = ann.height + '%';
                                         wrapper.appendChild(highlight);
                                     } else if (ann.type === 'note') {
+                                        // Nota
                                         const note = document.createElement('div');
                                         note.className = 'annotation-note';
                                         note.style.left = ann.x + '%';
@@ -646,6 +833,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                 });
                             }
                             
+                            // Handler de seleção de texto
                             function handleTextSelection() {
                                 const selection = window.getSelection();
                                 if (selection && selection.toString().trim()) {
@@ -668,11 +856,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                 }
                             }
                             
-                            // Search functionality
+                            // Função de busca no PDF
                             window.searchPDF = function(query) {
                                 currentSearchQuery = query;
-                                // PDF.js text search would go here
-                                // For now, we'll use a simple approach
                                 window.ReactNativeWebView.postMessage(JSON.stringify({
                                     type: 'searchResult',
                                     count: 0
@@ -697,14 +883,16 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         onMessage={handleWebViewMessage}
                         onError={(syntheticEvent) => {
                             const { nativeEvent } = syntheticEvent;
-                            console.warn('WebView error: ', nativeEvent);
+                            console.warn('Erro no WebView: ', nativeEvent);
                             setError('Erro ao carregar o visualizador de PDF.');
                         }}
                     />
                 );
 
+            // ====================================
+            // TIPO: IMAGEM
+            // ====================================
             case 'image':
-                // Use the bundled image from assets
                 return (
                     <ScrollView
                         className="flex-1 bg-gray-100"
@@ -729,6 +917,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                     </ScrollView>
                 );
 
+            // ====================================
+            // TIPO: DOCX
+            // ====================================
             case 'docx':
                 if (!docxBase64) {
                     return (
@@ -739,7 +930,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                     );
                 }
 
-                // HTML with embedded mammoth.js to render the DOCX
+                // HTML com mammoth.js embutido para renderização de DOCX
                 const docxHtml = `
                     <!DOCTYPE html>
                     <html>
@@ -834,7 +1025,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         <script>
                             const base64Data = '${docxBase64}';
                             
-                            // Convert base64 to ArrayBuffer
+                            // Converte base64 para ArrayBuffer
                             function base64ToArrayBuffer(base64) {
                                 const binaryString = atob(base64);
                                 const bytes = new Uint8Array(binaryString.length);
@@ -844,6 +1035,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                 return bytes.buffer;
                             }
                             
+                            // Renderiza o DOCX usando mammoth.js
                             async function renderDOCX() {
                                 try {
                                     const arrayBuffer = base64ToArrayBuffer(base64Data);
@@ -852,10 +1044,10 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                     container.innerHTML = result.value;
                                     
                                     if (result.messages.length > 0) {
-                                        console.log('Mammoth messages:', result.messages);
+                                        console.log('Mensagens do Mammoth:', result.messages);
                                     }
                                 } catch (error) {
-                                    console.error('Error rendering DOCX:', error);
+                                    console.error('Erro ao renderizar DOCX:', error);
                                     document.getElementById('document-container').innerHTML = 
                                         '<div class="error">Erro ao renderizar o documento: ' + error.message + '</div>';
                                 }
@@ -879,12 +1071,15 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         onMessage={handleWebViewMessage}
                         onError={(syntheticEvent) => {
                             const { nativeEvent } = syntheticEvent;
-                            console.warn('WebView error: ', nativeEvent);
+                            console.warn('Erro no WebView: ', nativeEvent);
                             setError('Erro ao carregar o visualizador de documento.');
                         }}
                     />
                 );
 
+            // ====================================
+            // TIPO: NÃO SUPORTADO
+            // ====================================
             default:
                 return (
                     <View className="flex-1 items-center justify-center px-6">
@@ -897,16 +1092,25 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
         }
     }
 
+    // ========================================
+    // RENDER PRINCIPAL
+    // ========================================
+
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-            {/* Header */}
+            {/* ======================================== */}
+            {/* HEADER */}
+            {/* ======================================== */}
             <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+                {/* Botão Voltar */}
                 <TouchableOpacity
                     onPress={() => navigation.goBack()}
                     className="p-2 -ml-2"
                 >
                     <Text className="text-2xl">←</Text>
                 </TouchableOpacity>
+
+                {/* Informações do documento */}
                 <View className="flex-1 ml-2">
                     <Text className="text-gray-800 font-semibold text-lg" numberOfLines={1}>
                         {document.title}
@@ -915,15 +1119,18 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         <Text className="text-gray-500 text-sm">
                             {DOCUMENT_TYPE_ICONS[document.type]} {document.type.toUpperCase()} • {document.size}
                         </Text>
+                        {/* Indicador offline */}
                         {isOffline && (
                             <Text className="text-green-600 text-sm ml-2">✓ Offline</Text>
                         )}
                     </View>
                 </View>
 
-                {/* Action buttons */}
+                {/* ------------------------------------ */}
+                {/* BOTÕES DE AÇÃO */}
+                {/* ------------------------------------ */}
                 <View className="flex-row items-center">
-                    {/* Search button */}
+                    {/* Botão: Busca */}
                     <TouchableOpacity
                         onPress={() => setShowSearch(!showSearch)}
                         className="p-2 mr-1"
@@ -931,7 +1138,7 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         <Text className="text-xl">🔍</Text>
                     </TouchableOpacity>
 
-                    {/* Offline button */}
+                    {/* Botão: Offline */}
                     <TouchableOpacity
                         onPress={isOffline ? handleRemoveOffline : handleSaveOffline}
                         disabled={isSavingOffline}
@@ -944,15 +1151,18 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         )}
                     </TouchableOpacity>
 
-                    {/* Annotation buttons (only for PDF) */}
+                    {/* Botões de anotação (apenas para PDF) */}
                     {document.type === 'pdf' && (
                         <>
+                            {/* Botão: Destaque */}
                             <TouchableOpacity
                                 onPress={() => setAnnotationMode(annotationMode === 'highlight' ? 'none' : 'highlight')}
                                 className={`p-2 mr-1 rounded ${annotationMode === 'highlight' ? 'bg-yellow-200' : ''}`}
                             >
                                 <Text className="text-xl">🖍️</Text>
                             </TouchableOpacity>
+
+                            {/* Botão: Nota */}
                             <TouchableOpacity
                                 onPress={() => {
                                     setAnnotationMode('note');
@@ -969,7 +1179,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 </View>
             </View>
 
-            {/* Search Bar */}
+            {/* ======================================== */}
+            {/* BARRA DE BUSCA */}
+            {/* ======================================== */}
             {showSearch && (
                 <View className="flex-row items-center px-4 py-2 bg-gray-50 border-b border-gray-100">
                     <TextInput
@@ -990,7 +1202,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 </View>
             )}
 
-            {/* Search Results Navigation */}
+            {/* ======================================== */}
+            {/* NAVEGAÇÃO DE RESULTADOS DE BUSCA */}
+            {/* ======================================== */}
             {showSearch && searchResults > 0 && (
                 <View className="flex-row items-center justify-between px-4 py-2 bg-yellow-50">
                     <Text className="text-gray-700">
@@ -1013,7 +1227,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 </View>
             )}
 
-            {/* Annotation Mode Indicator */}
+            {/* ======================================== */}
+            {/* INDICADOR DE MODO DE ANOTAÇÃO */}
+            {/* ======================================== */}
             {annotationMode !== 'none' && (
                 <View className="px-4 py-2 bg-yellow-100">
                     <Text className="text-yellow-800 text-center">
@@ -1024,7 +1240,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 </View>
             )}
 
-            {/* Content */}
+            {/* ======================================== */}
+            {/* CONTEÚDO DO DOCUMENTO */}
+            {/* ======================================== */}
             {isLoading ? (
                 <View className="flex-1 items-center justify-center">
                     <ActivityIndicator size="large" color="#4f46e5" />
@@ -1034,7 +1252,9 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                 renderDocumentContent()
             )}
 
-            {/* Note Modal */}
+            {/* ======================================== */}
+            {/* MODAL DE NOTA */}
+            {/* ======================================== */}
             <Modal
                 visible={showNoteModal}
                 transparent
@@ -1046,6 +1266,8 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                         <Text className="text-xl font-bold text-gray-800 mb-4">
                             {selectedAnnotation ? 'Editar Nota' : 'Nova Nota'}
                         </Text>
+
+                        {/* Campo de texto da nota */}
                         <TextInput
                             className="bg-gray-100 rounded-xl px-4 py-3 text-gray-800 min-h-[100px]"
                             placeholder="Digite sua nota..."
@@ -1055,7 +1277,10 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                             multiline
                             textAlignVertical="top"
                         />
+
+                        {/* Botões de ação */}
                         <View className="flex-row justify-end mt-4">
+                            {/* Botão Excluir (apenas para edição) */}
                             {selectedAnnotation && (
                                 <TouchableOpacity
                                     onPress={handleDeleteAnnotation}
@@ -1064,6 +1289,8 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                                     <Text className="text-red-600 font-medium">Excluir</Text>
                                 </TouchableOpacity>
                             )}
+
+                            {/* Botão Cancelar */}
                             <TouchableOpacity
                                 onPress={() => {
                                     setShowNoteModal(false);
@@ -1074,6 +1301,8 @@ export function DocumentViewerScreen({ navigation, route }: DocumentViewerScreen
                             >
                                 <Text className="text-gray-600 font-medium">Cancelar</Text>
                             </TouchableOpacity>
+
+                            {/* Botão Salvar */}
                             <TouchableOpacity
                                 onPress={handleAddNote}
                                 className="bg-primary-600 px-6 py-2 rounded-lg"
