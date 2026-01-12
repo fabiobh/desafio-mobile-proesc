@@ -115,4 +115,6 @@ FAB (+) → Bottom Sheet → Selecionar categoria → Escolher arquivo → Envia
 
 ## 👨‍💻 Autor
 
+Fabio Cunha
+
 Desenvolvido para o Desafio Técnico Proesc.
