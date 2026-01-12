@@ -21,7 +21,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#4f46e5"
       },
-      "package": "com.proesc.portalaluno"
+      "package": "com.proesc.portalaluno",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -53,8 +56,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "proesc-portal-aluno"
+        "projectId": "c1669179-ce5b-4efe-abe4-79173f7c27d5"
       }
-    }
+    },
+    "owner": "fabiobh"
   }
 }
